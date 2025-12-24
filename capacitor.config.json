@@ -1,0 +1,6 @@
+{
+  "appId": "com.chaospartynight.app",
+  "appName": "Chaos Party Night",
+  "webDir": "web",
+  "bundledWebRuntime": false
+}

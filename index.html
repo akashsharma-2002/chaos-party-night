@@ -1,0 +1,2796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaos Party App</title>
+  <style>
+    :root {
+      --bg-1: #0f1024;
+      --bg-2: #281b57;
+      --bg-3: #1f1236;
+      --glass: rgba(255, 255, 255, 0.08);
+      --accent: #ff3b6a;
+      --accent-2: #ffd166;
+      --accent-3: #63f5ff;
+      --text: #f7f8ff;
+      --muted: #c5c4e0;
+      --green: #6cfab4;
+      --yellow: #ffe38d;
+    }
+
+    .panic {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(26px, 8vw, 48px);
+      color: #ffe38d;
+      text-shadow: 0 0 12px rgba(255, 227, 141, 0.8);
+      opacity: 0;
+    }
+
+    .shake {
+      animation: shake 0.25s linear 1;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      20% { transform: translateX(-53%) translateY(-2px); }
+      40% { transform: translateX(-47%) translateY(2px); }
+      60% { transform: translateX(-51%) translateY(-1px); }
+      80% { transform: translateX(-49%) translateY(1px); }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Montserrat", "Impact", "Haettenschweiler", "Arial Narrow Bold", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 20%, rgba(255, 59, 106, 0.12), transparent 35%),
+                  radial-gradient(circle at 80% 0%, rgba(99, 245, 255, 0.16), transparent 45%),
+                  linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+      background-size: 200% 200%;
+      animation: bgMove 12s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 20% 20%, 80% 0%, 0 0; }
+      50% { background-position: 80% 80%, 20% 20%, 100% 50%; }
+      100% { background-position: 20% 20%, 80% 0%, 0 0; }
+    }
+
+    .beams {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 30% -10%, rgba(255, 255, 255, 0.08), transparent 40%),
+                  radial-gradient(ellipse at 80% 10%, rgba(255, 255, 255, 0.06), transparent 40%);
+      mix-blend-mode: screen;
+      animation: beams 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes beams {
+      from { transform: rotate(-2deg) scale(1.02); opacity: 0.7; }
+      to { transform: rotate(2deg) scale(1.06); opacity: 1; }
+    }
+
+    main {
+      width: min(960px, 100%);
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen {
+      display: none;
+      padding: 20px;
+      border-radius: 28px;
+      border: 2px solid rgba(255, 255, 255, 0.14);
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .screen.active { display: block; }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255, 59, 106, 0.28), rgba(99, 245, 255, 0.22));
+      font-size: 14px;
+      letter-spacing: 1px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .chaos-meter {
+      flex: 1;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chaos-meter .fill {
+      position: absolute;
+      inset: 0;
+      width: 30%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-3));
+      transition: width 0.25s ease, filter 0.25s ease;
+      filter: drop-shadow(0 0 8px rgba(255, 59, 106, 0.7));
+    }
+
+    h1 {
+      margin: 10px 0 6px;
+      font-size: clamp(40px, 8vw, 70px);
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: clamp(18px, 4vw, 24px);
+      margin-bottom: 20px;
+    }
+
+    .glass {
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 14px;
+      margin: 10px 0;
+      text-align: left;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .label {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .hint { color: var(--muted); font-size: 14px; }
+
+    .stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 6px;
+    }
+
+    .stepper button {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      font-size: 24px;
+    }
+
+    .stepper span {
+      min-width: 42px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .pill.active {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      border-color: var(--accent-2);
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip-name {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 8px 10px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .chip-name button {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    .field-inline {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #0b0816;
+      background: linear-gradient(135deg, var(--accent), #ff7f50);
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 59, 106, 0.45);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      font-size: clamp(16px, 4vw, 22px);
+    }
+
+    button.primary {
+      width: 100%;
+      font-size: clamp(20px, 5vw, 26px);
+      padding: 16px;
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #6c63ff, #45caff);
+      color: #05030d;
+    }
+
+    button.ghost {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: none;
+    }
+
+    button:active { transform: scale(0.97); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .note { color: var(--muted); font-size: 14px; }
+
+    .hero {
+      font-size: clamp(52px, 10vw, 90px);
+      margin: 12px 0;
+      text-shadow: 0 0 18px rgba(255, 59, 106, 0.4);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+    }
+
+    .big-btns {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .split-btns {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .flash {
+      animation: flash 0.16s linear 8;
+    }
+    @keyframes flash { 0%, 100% { background: rgba(255, 255, 255, 0.08); } 50% { background: rgba(255, 0, 0, 0.45); } }
+
+    .bomb-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      margin: 26px auto 10px;
+      width: clamp(220px, 50vw, 360px);
+      aspect-ratio: 1;
+    }
+
+    .bomb-ring {
+      position: absolute;
+      inset: 4%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 60%);
+      box-shadow: 0 0 30px rgba(255, 59, 106, 0.35);
+      animation: throb 1.2s infinite ease-in-out;
+    }
+
+    .bomb {
+      width: 80%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ffe7b8, #ff3b6a 50%, #1a0a1d 70%);
+      position: relative;
+      box-shadow: 0 0 35px rgba(255, 63, 106, 0.65);
+      animation: throb 0.85s infinite ease-in-out;
+    }
+    .bomb::after {
+      content: "";
+      position: absolute;
+      width: 24%;
+      height: 24%;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.26);
+      top: 16%;
+      left: 16%;
+    }
+    .fuse { position: absolute; top: -36px; left: 50%; width: 16px; height: 64px; background: #2f2219; border-radius: 12px; transform: translateX(-50%); overflow: hidden; }
+    .spark { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle, #ffd166, #ff3b3b); top: -12px; left: -1px; animation: spark 0.38s infinite ease-in-out; box-shadow: 0 0 14px rgba(255, 209, 102, 0.8); }
+    @keyframes spark { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(46px) scale(0.6); opacity: 0.4; } }
+    @keyframes throb { 0% { transform: scale(0.98); filter: drop-shadow(0 0 8px rgba(255, 63, 106, 0.45)); } 100% { transform: scale(1.05); filter: drop-shadow(0 0 18px rgba(255, 63, 106, 0.8)); } }
+
+    .fuse-line {
+      position: absolute;
+      top: 6%;
+      left: 50%;
+      width: 4px;
+      height: 92%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #ffefba, #ff3b6a, #0f0c29);
+      background-size: 100% 200%;
+      animation: burn 2s linear infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 209, 102, 0.6));
+    }
+    @keyframes burn {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+
+    .pass-flash {
+      font-size: clamp(26px, 7vw, 40px);
+      color: var(--yellow);
+      letter-spacing: 2px;
+      animation: blink 0.6s steps(2, jump-none) infinite;
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    @keyframes blink { 50% { opacity: 0.2; } }
+
+    .countdown {
+      font-size: clamp(48px, 12vw, 110px);
+      letter-spacing: 4px;
+      margin: 12px 0;
+    }
+
+    .word-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 14px 0;
+    }
+
+    .word-chip {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-weight: 800;
+      letter-spacing: 1px;
+      transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+    }
+
+    .word-chip.active {
+      background: linear-gradient(135deg, #ffd166, #ff3b6a);
+      color: #0a041a;
+      transform: scale(1.08);
+      box-shadow: 0 0 18px rgba(255, 209, 102, 0.45);
+    }
+
+    .roulette {
+      position: relative;
+      display: grid;
+      place-items: center;
+      margin: 12px auto;
+    }
+
+    #wheelCanvas {
+      width: min(360px, 90vw);
+      height: min(360px, 90vw);
+      background: radial-gradient(circle, rgba(255,255,255,0.06), rgba(0,0,0,0.25));
+      border-radius: 50%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .pointer {
+      position: absolute;
+      top: -6px;
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-bottom: 18px solid var(--accent-2);
+      filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.8));
+    }
+
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .microcopy { font-size: 15px; color: var(--muted); }
+    .strobe {
+      animation: strobe 0.3s linear 1;
+    }
+    @keyframes strobe {
+      0% { background: #000; }
+      50% { background: #fff; }
+      100% { background: #7a0000; }
+    }
+
+    .lobby {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 720px) {
+      .lobby { grid-template-columns: 1fr; }
+    }
+
+    .game-list {
+      display: grid;
+      gap: 8px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .game-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.1s ease, border 0.1s ease;
+    }
+    .game-item.selected { border-color: var(--accent-2); box-shadow: 0 10px 20px rgba(0,0,0,0.25); transform: translateY(-1px); }
+    .game-item.locked { opacity: 0.45; cursor: not-allowed; }
+    .game-item .name { font-weight: 700; }
+    .game-item .chip { font-size: 12px; }
+
+    .duel-names {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin: 12px 0;
+    }
+
+    .duel-card {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .arena {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .task-meta {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
+
+    .score-chip {
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      font-weight: 800;
+    }
+
+    .judge-btns {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      margin-top: 12px;
+    }
+
+    .success-text {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .level-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .level-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border 0.12s ease;
+    }
+
+    .level-card h3 { margin: 6px 0; }
+    .level-card.locked { opacity: 0.4; cursor: not-allowed; }
+    .level-card.active { border-color: var(--accent-2); box-shadow: 0 10px 20px rgba(0,0,0,0.3); transform: translateY(-2px); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(8, 8, 20, 0.85);
+      z-index: 20;
+      padding: 16px;
+    }
+
+    .modal.active { display: grid; }
+
+    .modal-card {
+      width: min(520px, 92vw);
+      text-align: center;
+    }
+
+    .modal-card h2 {
+      margin: 6px 0 10px;
+      font-size: clamp(26px, 6vw, 34px);
+    }
+
+    .modal-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .modal-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .link {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="beams"></div>
+  <main>
+    <section id="screen-age" class="screen active">
+      <h1>⚠️ 18+ PARTY</h1>
+      <div class="subtitle">Alcohol optional. Play responsibly. You can always skip penalties.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-age-yes">✅ I AM 18+</button>
+        <button class="ghost" id="btn-age-exit">❌ EXIT</button>
+      </div>
+    </section>
+
+    <section id="screen-setup" class="screen">
+      <div class="topline">
+        <span class="chip">LIVE</span>
+        <div class="chaos-meter"><div class="fill" id="chaosFill"></div></div>
+      </div>
+      <h1>CHAOS LOBBY</h1>
+      <div class="subtitle">Set the players. Set the heat. Start the mayhem.</div>
+
+      <div class="glass">
+        <div class="row">
+          <div>
+            <div class="label">Players</div>
+            <div class="hint">3–20</div>
+          </div>
+          <div class="stepper">
+            <button class="ghost" id="btn-count-dec">−</button>
+            <span id="playerCount">6</span>
+            <button class="ghost" id="btn-count-inc">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass">
+        <div class="label">Chaos Level</div>
+        <input type="range" min="1" max="3" step="1" value="2" id="chaosSlider">
+        <div class="slider-labels">
+          <span>1 Chill 😌</span>
+          <span>2 Wild 😈</span>
+          <span>3 Insane 💣</span>
+        </div>
+        <div class="subtitle" id="chaosDescriptor">Faster timers, louder rounds</div>
+      </div>
+
+      <div class="glass">
+        <div class="row">
+          <div>
+            <div class="label">Players</div>
+            <div class="hint" id="nameLimitHint">Add exactly 6 names.</div>
+          </div>
+        </div>
+        <div id="namesBlock">
+          <div class="field-inline">
+            <input type="text" id="nameInput" placeholder="Add player name" />
+            <button id="btn-add-name" class="secondary">Add</button>
+          </div>
+          <div class="chips" id="nameChips"></div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <button class="primary" id="btn-start-party">START PARTY 🎉</button>
+        <div class="settings-row">
+          <button class="ghost" id="btn-how">How to play</button>
+          <button class="ghost" id="btn-sound">Sound: ON</button>
+          <button class="ghost" id="btn-vibe">Vibration: ON</button>
+          <button class="ghost" id="btn-privacy-settings">Privacy & Ads</button>
+          <button class="ghost" id="btn-reset-party">New Party / Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-pass" class="screen">
+      <div class="chip">Stage Ready</div>
+      <h1 class="hero">PARTY LOBBY</h1>
+      <div class="subtitle">Pick the next chaos. Left: games. Right: hype.</div>
+      <div class="lobby">
+        <div>
+          <div class="game-list" id="gameList"></div>
+        </div>
+        <div class="glass">
+          <div class="label" id="gameTitle">Bomb Blast 💣</div>
+          <p id="gameDescription">Pass the phone till it explodes. Don’t be the holder.</p>
+          <div class="big-btns">
+            <button class="primary" id="btn-start-selected">START SELECTED GAME</button>
+            <button class="ghost" id="btn-adjust-chaos">Adjust chaos</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-game1-intro" class="screen">
+      <h1>BOMB BLAST 💣</h1>
+      <div class="subtitle">Pass fast. Don’t hold it at BOOM.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-game1-start">START</button>
+        <button class="ghost" id="btn-game1-rules">Rules</button>
+      </div>
+    </section>
+
+    <section id="screen-game1-play" class="screen">
+      <h1>PASS IT NOW</h1>
+      <div class="subtitle">No countdown. Tick speeds up randomly.</div>
+      <div class="bomb-wrap">
+        <div class="bomb-ring"></div>
+        <div class="bomb">
+          <div class="fuse"></div><div class="spark"></div>
+          <div class="fuse-line"></div>
+        </div>
+        <div class="pass-flash" id="passFlash">PASS!</div>
+        <div class="panic" id="panicMessage"></div>
+      </div>
+      <div class="tag" id="styleTag">Wild pace</div>
+    </section>
+
+    <section id="screen-game1-boom" class="screen">
+      <h1 class="hero">BOOM 💥</h1>
+      <div class="subtitle">Holder loses.</div>
+    </section>
+
+    <section id="screen-duel-intro" class="screen">
+      <h1>TASK DUEL ⚔️</h1>
+      <div class="subtitle">Best of 3. No mercy.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-duel-start">START</button>
+      </div>
+    </section>
+
+    <section id="screen-duel-pick" class="screen">
+      <h1>PICK PLAYERS</h1>
+      <div class="subtitle">Randomly picking two rivals.</div>
+      <div class="duel-names">
+        <div class="duel-card" id="duelP1">Player 1: —</div>
+        <div class="duel-card" id="duelP2">Player 2: —</div>
+      </div>
+      <div class="tag success-text" id="duelSelected">Selected: —</div>
+    </section>
+
+    <section id="screen-duel-task-brief" class="screen">
+      <div class="task-meta">
+        <div class="tag" id="duelTaskLabel">TASK 1/3</div>
+        <div class="score-chip" id="duelScore">A:0 | B:0</div>
+      </div>
+      <h1 id="duelTaskTitle">NO SMILE STAREDOWN</h1>
+      <div class="subtitle" id="duelTaskSubtitle">Stare 35s. First crack loses.</div>
+      <div class="big-btns" id="coinChoiceRow" style="display:none;">
+        <button class="secondary" id="btn-coin-heads">HEADS</button>
+        <button class="secondary" id="btn-coin-tails">TAILS</button>
+      </div>
+      <div class="big-btns">
+        <button class="primary" id="btn-duel-ready">READY</button>
+      </div>
+    </section>
+
+    <section id="screen-duel-countdown" class="screen">
+      <div class="task-meta">
+        <div class="tag" id="duelTaskLabel2">TASK 1/3</div>
+        <div class="score-chip" id="duelScore2">A:0 | B:0</div>
+      </div>
+      <h1 id="duelCountdownTitle">ARENA READY</h1>
+      <div class="subtitle" id="duelVs">— vs —</div>
+      <div class="countdown" id="duelCountdown">3</div>
+    </section>
+
+    <section id="screen-duel-active" class="screen">
+      <div class="task-meta">
+        <div class="tag" id="duelTaskLabel3">TASK 1/3</div>
+        <div class="score-chip" id="duelScore3">A:0 | B:0</div>
+      </div>
+      <h1 id="duelActiveTitle">DON’T CRACK</h1>
+      <div class="subtitle" id="duelActiveSubtitle">Timer running.</div>
+      <div class="arena">
+        <div class="countdown" id="duelTimer">35</div>
+        <div class="note" id="duelTaskHint">No smiling.</div>
+      </div>
+    </section>
+
+    <section id="screen-duel-judge" class="screen">
+      <div class="task-meta">
+        <div class="tag" id="duelTaskLabel4">TASK 1/3</div>
+        <div class="score-chip" id="duelScore4">A:0 | B:0</div>
+      </div>
+      <h1>WHO LOST?</h1>
+      <div class="subtitle">Tap the one who cracked.</div>
+      <div class="judge-btns">
+        <button class="secondary" id="btn-duel-a">Player A cracked</button>
+        <button class="secondary" id="btn-duel-b">Player B cracked</button>
+        <button class="ghost" id="btn-duel-none">Draw / No one</button>
+      </div>
+    </section>
+
+    <section id="screen-duel-point" class="screen">
+      <h1 id="duelPointTitle">POINT TO —</h1>
+      <div class="subtitle" id="duelPointSub">Score updated.</div>
+    </section>
+
+    <section id="screen-duel-winner" class="screen">
+      <h1 id="duelWinnerTitle">WINNER: — 🏆</h1>
+      <div class="subtitle">Loser takes a penalty.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-duel-penalty">PENALTY</button>
+      </div>
+    </section>
+
+    <section id="screen-lie-intro" class="screen">
+      <h1>THE LIE ENGINE 🤥⚙️</h1>
+      <div class="subtitle">Speaker tries to trick the room.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-lie-start">START</button>
+      </div>
+    </section>
+
+    <section id="screen-lie-speaker" class="screen">
+      <h1>PICK SPEAKER</h1>
+      <div class="subtitle">App selects one speaker.</div>
+      <div class="duel-names">
+        <div class="duel-card" id="lieSpeakerTag">Speaker: —</div>
+      </div>
+      <div class="tag success-text" id="lieSelected">Selected: —</div>
+    </section>
+
+    <section id="screen-lie-ready" class="screen">
+      <h1 id="lieReadyTitle">Get ready</h1>
+      <div class="subtitle" id="lieReadySub">Speaker is up.</div>
+      <div class="countdown" id="lieReadyCountdown">5</div>
+    </section>
+
+    <section id="screen-lie-room" class="screen">
+      <h1>ROOM LOCK IN</h1>
+      <div class="subtitle" id="lieRoomSub">Don’t get tricked.</div>
+      <div class="countdown" id="lieRoomCountdown">5</div>
+    </section>
+
+    <section id="screen-lie-prompt" class="screen">
+      <h1 id="liePromptTitle">Prompt</h1>
+      <div class="subtitle" id="liePromptText">---</div>
+      <div class="big-btns">
+        <button class="secondary" id="btn-lie-truth">✅ TRUTH</button>
+        <button class="secondary" id="btn-lie-lie">🤥 LIE</button>
+      </div>
+    </section>
+
+    <section id="screen-lie-vote" class="screen">
+      <h1>ROOM VOTE</h1>
+      <div class="subtitle">Room thinks the speaker was…</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-room-truth">Room guessed TRUTH</button>
+        <button class="secondary" id="btn-room-lie">Room guessed LIE</button>
+      </div>
+    </section>
+
+    <section id="screen-lie-reveal" class="screen">
+      <h1 id="lieRevealTitle">REVEAL</h1>
+      <div class="subtitle" id="lieRevealSub">---</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-lie-penalty">PENALTY</button>
+      </div>
+    </section>
+
+    <section id="screen-caught" class="screen">
+      <h1>Who got caught?</h1>
+      <div class="subtitle">Pick the holder at explosion.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-caught-me">I GOT CAUGHT</button>
+        <button class="secondary" id="btn-caught-pick">PICK LOSER</button>
+      </div>
+      <div class="glass" id="caughtPicker" style="display:none; max-height: 260px; overflow:auto;">
+        <div class="chips" id="caughtList"></div>
+      </div>
+    </section>
+
+    <section id="screen-penalty" class="screen">
+      <h1 id="penaltyTitle">Penalty</h1>
+      <div class="subtitle" id="penaltySub">Choose now.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-penalty-drink">🍺 DRINK</button>
+        <button class="secondary" id="btn-penalty-skip">✅ SKIP / TASK</button>
+      </div>
+      <div class="glass" id="taskCard" style="display:none;">
+        <div class="label">Task</div>
+        <div id="taskText">Do 5 claps + 1 spin</div>
+      </div>
+      <div class="tag" id="penaltyStats"></div>
+    </section>
+
+    <section id="screen-post" class="screen">
+      <h1 id="postTitle">What now?</h1>
+      <div class="subtitle">Room decides.</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-play-again">🔁 PLAY AGAIN</button>
+        <button class="secondary" id="btn-next-game">⏭️ NEXT GAME</button>
+      </div>
+      <div class="split-btns">
+        <button class="ghost" id="btn-change-game">🎲 CHANGE GAME</button>
+        <button class="ghost" id="btn-home">🏠 HOME</button>
+        <button class="ghost" id="btn-adjust-chaos-2">⚙️ Adjust chaos</button>
+      </div>
+      <div class="tag" id="postStats"></div>
+    </section>
+
+    <section id="screen-game2-intro" class="screen">
+      <h1>RHYTHM READ 🔊</h1>
+      <div class="subtitle">Read in sync. Don’t break the beat.</div>
+      <button class="primary" id="btn-pick-player">PICK PLAYER</button>
+    </section>
+
+    <section id="screen-game2-select" class="screen">
+      <h1>PLAYER ROULETTE</h1>
+      <div class="subtitle" id="rouletteStatus">Shake or tap to spin.</div>
+      <div class="roulette">
+        <canvas id="wheelCanvas" width="360" height="360"></canvas>
+        <div class="pointer"></div>
+      </div>
+      <div class="tag" id="passingTag">Passing: —</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-spin">SPIN</button>
+        <button class="ghost" id="btn-start-rhythm">Start Rhythm Read</button>
+      </div>
+    </section>
+
+    <section id="screen-level-select" class="screen">
+      <h1>CHOOSE LEVEL</h1>
+      <div class="subtitle" id="levelPlayer">Up next: —</div>
+      <div class="level-grid">
+        <div class="level-card" id="card-easy" data-level="easy">
+          <div class="chip">Unlocked</div>
+          <h3>EASY</h3>
+          <div class="note">3 rounds | Slower beat</div>
+        </div>
+        <div class="level-card locked" id="card-medium" data-level="medium">
+          <div class="chip">Locked</div>
+          <h3>MEDIUM</h3>
+          <div class="note">Unlock after Easy</div>
+        </div>
+        <div class="level-card locked" id="card-hard" data-level="hard">
+          <div class="chip">Locked</div>
+          <h3>HARD</h3>
+          <div class="note">Coming soon</div>
+        </div>
+      </div>
+      <div class="big-btns">
+        <button class="ghost" id="btn-level-back">Back</button>
+      </div>
+    </section>
+
+    <section id="screen-round" class="screen">
+      <h1 id="roundHeader">EASY — Round 1/3</h1>
+      <div class="subtitle" id="roundPlayer">Player: —</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-round-ready">READY</button>
+        <button class="ghost" id="btn-round-back">Back</button>
+      </div>
+    </section>
+
+    <section id="screen-game2-challenge" class="screen">
+      <h1>RHYTHM READ</h1>
+      <div class="subtitle" id="sequenceLabel">Stay on beat.</div>
+      <div class="countdown" id="twisterCountdown">3</div>
+      <div class="word-row" id="sequenceWords"></div>
+    </section>
+
+    <section id="screen-judge" class="screen">
+      <h1>Judge</h1>
+      <div class="subtitle">Did they nail the rhythm?</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-clean">✅ PASS</button>
+        <button class="secondary" id="btn-fail">❌ FAIL</button>
+      </div>
+    </section>
+
+    <section id="screen-result" class="screen">
+      <h1 id="resultTitle">Result</h1>
+      <div class="subtitle" id="resultSubtitle">Outcome</div>
+      <div class="big-btns">
+        <button class="primary" id="btn-go-medium" style="display:none;">GO MEDIUM</button>
+        <button class="primary" id="btn-go-hard" style="display:none;">GO HARD</button>
+        <button class="secondary" id="btn-replay-level" style="display:none;">🔁 REPLAY LEVEL</button>
+        <button class="ghost" id="btn-next-game-result" style="display:none;">⏭️ NEXT GAME</button>
+        <button class="ghost" id="btn-result-continue">Continue</button>
+      </div>
+    </section>
+
+    <div id="privacyModal" class="modal" aria-hidden="true">
+      <div class="glass modal-card">
+        <h2>Privacy & Ads</h2>
+        <div class="subtitle">We show ads only on the post-game screen.</div>
+        <div class="modal-actions">
+          <button class="primary" id="btn-ads-personalized">Allow personalized</button>
+          <button class="secondary" id="btn-ads-nonpersonalized">No thanks</button>
+        </div>
+        <div class="note" id="adsStatus">Ads preference: —</div>
+        <div class="modal-links">
+          <button class="ghost" id="btn-ads-reset-consent">Reset consent</button>
+          <a class="ghost link" id="privacyLink" href="https://example.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+          <button class="ghost" id="btn-ads-close">Close</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const screens = {
+      age: document.getElementById("screen-age"),
+      setup: document.getElementById("screen-setup"),
+      pass: document.getElementById("screen-pass"),
+      game1Intro: document.getElementById("screen-game1-intro"),
+      game1Play: document.getElementById("screen-game1-play"),
+      game1Boom: document.getElementById("screen-game1-boom"),
+      caught: document.getElementById("screen-caught"),
+      penalty: document.getElementById("screen-penalty"),
+      post: document.getElementById("screen-post"),
+      game2Intro: document.getElementById("screen-game2-intro"),
+      game2Select: document.getElementById("screen-game2-select"),
+      levelSelect: document.getElementById("screen-level-select"),
+      round: document.getElementById("screen-round"),
+      game2Challenge: document.getElementById("screen-game2-challenge"),
+      judge: document.getElementById("screen-judge"),
+      result: document.getElementById("screen-result"),
+      duelIntro: document.getElementById("screen-duel-intro"),
+      duelPick: document.getElementById("screen-duel-pick"),
+      duelCountdown: document.getElementById("screen-duel-countdown"),
+      duelTaskBrief: document.getElementById("screen-duel-task-brief"),
+      duelActive: document.getElementById("screen-duel-active"),
+      duelJudge: document.getElementById("screen-duel-judge"),
+      duelPoint: document.getElementById("screen-duel-point"),
+      duelWinner: document.getElementById("screen-duel-winner"),
+      lieIntro: document.getElementById("screen-lie-intro"),
+      lieSpeaker: document.getElementById("screen-lie-speaker"),
+      lieReady: document.getElementById("screen-lie-ready"),
+      lieRoom: document.getElementById("screen-lie-room"),
+      liePrompt: document.getElementById("screen-lie-prompt"),
+      lieVote: document.getElementById("screen-lie-vote"),
+      lieReveal: document.getElementById("screen-lie-reveal"),
+    };
+
+    const state = {
+      sessionId: Date.now().toString(36),
+      chaosLevel: 2,
+      playerCount: 6,
+      players: [],
+      lastLoser: "current holder",
+      caughtName: null,
+      lastGamePlayed: 1,
+      settings: { sound: true, vibration: true, skipMode: true },
+      persistAllowed: false,
+      ads: { preference: "unknown", canRequest: false },
+      rhythm: {
+        player: null,
+        currentLevel: "easy",
+        round: 1,
+        unlocked: { easy: true, medium: false, hard: false },
+        cleared: { easy: false, medium: false, hard: false },
+        usedIndices: { easy: [], medium: [], hard: [] },
+        currentSequence: [],
+      },
+      games: [
+        { id: 0, name: "Bomb Blast 💣", desc: "Pass the phone till it explodes. Don’t be the holder.", unlocked: true },
+        { id: 1, name: "Rhythm Read 🔊", desc: "Read the beat-perfect word ladder without tripping.", unlocked: true },
+        { id: 2, name: "Task Duel ⚔️", desc: "Best of 3 tasks. Don’t crack.", unlocked: true },
+        { id: 3, name: "Lie Engine 🤥⚙️", desc: "Speaker tries to fool the room. Truth or lie?", unlocked: true },
+        { id: 4, name: "Dare Dash", desc: "Locked chaos — coming soon.", unlocked: true },
+        { id: 5, name: "Memory Mayhem", desc: "Locked chaos — coming soon.", unlocked: true },
+        { id: 6, name: "Beat Battle", desc: "Locked chaos — coming soon.", unlocked: true },
+        { id: 7, name: "Quick Charades", desc: "Locked chaos — coming soon.", unlocked: true },
+        { id: 8, name: "Final Frenzy", desc: "Locked chaos — coming soon.", unlocked: true },
+      ],
+      selectedGame: 0,
+      duel: { players: [], taskIndex: 0, taskPool: [], scores: [0,0], cracks: [0,0], draws: 0, coinAssign: null, coinResult: "" },
+      lie: { speaker: null, prompt: "", choice: null },
+      duelLeaderRole: "A",
+    };
+
+    const chaosDescriptors = {
+      1: "Warm laughs, low penalties",
+      2: "Faster timers, louder rounds",
+      3: "Short timers, brutal pace",
+    };
+    const game1Durations = { 1: [18, 30], 2: [10, 22], 3: [6, 16] };
+    const twisters = [
+      "She sells sea shells by the sea shore",
+      "Red leather, yellow leather",
+      "Unique New York, Unique New York",
+      "Irish wristwatch, Swiss wristwatch",
+      "Toy boat, toy boat, toy boat",
+      "I saw Susie sitting in a shoeshine shop",
+      "Fresh fried fish, fish fresh fried",
+      "Brisk brave brigadiers brandished broad bright blades",
+      "Crisp crusts crackle crunchily"
+    ];
+    const duelTasks = [
+      { name: "NO SMILE STAREDOWN", rule: "Stare without laughing.", hints: "Crowd distracts. First crack loses.", times: {1:35,2:30,3:25}, allowNone: true, type: "timer" },
+      { name: "STATUE HANDS", rule: "Hold hand still. No movement.", hints: "Crowd distracts. First movement loses.", times: {1:25,2:22,3:18}, allowNone: true, type: "timer" },
+      { name: "COIN FLIP DUEL", rule: "Pick heads or tails. Coin decides.", hints: "Choose a side, then flip.", times: {1:6,2:6,3:6}, allowNone: false, type: "coin" },
+      { name: "NO BLINK CHICKEN", rule: "Don’t blink. First blink loses.", hints: "Keep eyes open. Crowd distracts.", times: {1:25,2:20,3:18}, allowNone: true, type: "timer" },
+      { name: "FREEZE FRAME", rule: "Strike a pose. Don’t move.", hints: "First movement loses.", times: {1:20,2:18,3:15}, allowNone: true, type: "timer" },
+      { name: "SLOW-MO RACE", rule: "Move hand from head to knee in slow motion.", hints: "Speed up = lose.", times: {1:22,2:18,3:15}, allowNone: true, type: "timer" },
+      { name: "ECHO CLAP", rule: "Clap in sync. Stay on beat.", hints: "First off-beat loses.", times: {1:20,2:18,3:15}, allowNone: true, type: "timer" },
+      { name: "ROCK STEADY", rule: "Hold one arm out. No shaking.", hints: "First wobble loses.", times: {1:20,2:17,3:14}, allowNone: true, type: "timer" },
+      { name: "QUIET FACE", rule: "No facial reaction.", hints: "First smile or laugh loses.", times: {1:18,2:16,3:14}, allowNone: true, type: "timer" },
+      { name: "FOCUS POINT", rule: "Stare at a fixed point.", hints: "Look away = lose.", times: {1:20,2:18,3:15}, allowNone: true, type: "timer" },
+      { name: "TINY STEPS", rule: "March in place without lifting heels.", hints: "Any big step loses.", times: {1:20,2:18,3:15}, allowNone: true, type: "timer" },
+      { name: "ONE-LEG HOLD", rule: "Balance on one leg.", hints: "Foot down = lose.", times: {1:18,2:16,3:14}, allowNone: true, type: "timer" },
+      { name: "PALM PRESS", rule: "Press palms together. Don’t wobble.", hints: "First shake loses.", times: {1:20,2:18,3:15}, allowNone: true, type: "timer" },
+    ];
+    const rhythmSequences = {
+      easy: [
+        ["POP","PIP","POP","POP","PIP","POP","PIP"], // 7
+        ["CAT","COT","CAT","COT","COT","CAT"],       // 6
+        ["MAP","MOP","MAP","MAP","MOP","MAP","MAP"], // 7
+        ["SUN","SIN","SUN","SUN","SIN","SUN"],       // 6
+        ["BAG","BIG","BAG","BAG","BIG","BAG","BIG"], // 7
+        ["DOT","DIT","DOT","DIT","DOT","DOT"],       // 6
+        ["RAG","RIG","RAG","RAG","RIG","RAG","RIG"], // 7
+        ["HOP","HIP","HOP","HOP","HIP","HOP"],       // 6
+        ["LUG","LOG","LUG","LOG","LOG","LUG","LUG"], // 7
+        ["NET","NOT","NET","NOT","NOT","NET"],       // 6
+      ],
+      medium: [
+        ["CLAP","CLIP","CLUB","CLAP","CLIP","CLUB","CLAP","CLUB"], // 8
+        ["SHIP","SHOP","SHUP","SHIP","SHOP","SHUP","SHOP","SHIP","SHUP"], // 9
+        ["RIB","ROB","RUB","RIB","RUB","ROB","RIB","RUB","ROB","RIB"], // 10
+        ["TACK","TICK","TOCK","TACK","TICK","TOCK","TACK","TOCK"], // 8
+        ["PACK","PECK","PUCK","PACK","PECK","PUCK","PECK","PACK","PUCK"], // 9
+        ["LACK","LICK","LOCK","LACK","LICK","LOCK","LACK","LOCK"], // 8
+        ["SACK","SICK","SOCK","SACK","SOCK","SICK","SACK","SICK","SOCK"], // 9
+        ["RACK","RICK","ROCK","RACK","ROCK","RICK","RACK","RICK","ROCK"], // 9
+        ["MATH","MOTH","MYTH","MATH","MYTH","MOTH","MATH","MOTH"], // 8
+        ["TAME","TIME","TOME","TAME","TIME","TOME","TIME","TAME","TOME"], // 9
+      ],
+      hard: [
+        ["FLASH","FLUSH","FLESH","FLASH","FLUSH","FLESH","FLASH","FLUSH","FLESH","FLASH","FLUSH"], // 11
+        ["BRICK","BRACK","BROCK","BRUCK","BRICK","BROCK","BRACK","BRUCK","BRICK","BRUCK","BRACK"], // 11
+        ["SPLIT","SPLAT","SPLUT","SPLIT","SPLAT","SPLUT","SPLIT","SPLAT","SPLUT","SPLIT","SPLAT","SPLUT"], // 12
+        ["SHARE","SHIRE","SHORE","SHARE","SHORE","SHIRE","SHARE","SHIRE","SHORE","SHARE"], // 10
+        ["TRACK","TRICK","TRUCK","TRACK","TRUCK","TRICK","TRACK","TRICK","TRUCK","TRACK"], // 10
+        ["BLAND","BLEND","BLIND","BLAND","BLIND","BLEND","BLAND","BLEND","BLIND","BLAND"], // 10
+        ["POCKET","PACKET","PICKET","POCKET","PACKET","PICKET","POCKET","PICKET","PACKET","POCKET"], // 10
+        ["CRANE","CRONE","CRUNE","CRANE","CRUNE","CRONE","CRANE","CRONE","CRUNE","CRANE","CRONE"], // 11
+        ["FLAKE","FLIKE","FLOKE","FLAKE","FLOKE","FLIKE","FLAKE","FLIKE","FLOKE","FLAKE"], // 10
+        ["PLANE","PLINE","PLONE","PLANE","PLONE","PLINE","PLANE","PLINE","PLONE","PLANE","PLONE"], // 11
+      ],
+    };
+    const skipTasks = [
+      "Do 5 claps + 1 spin",
+      "Speak like a robot for 30 sec",
+      "Compliment someone dramatically",
+      "Air guitar solo for 10 sec",
+      "Balance on one foot for 8 sec",
+      "Whisper a hype speech to the room",
+      "Make a drum roll on the table",
+    ];
+    const liePrompts = [
+      "What’s the most awkward thing you did this year?",
+      "What’s a dumb purchase you regret?",
+      "Which friend annoys you the most and why?",
+      "What’s a secret you kept from this group?",
+      "What’s the biggest lie you told recently?",
+      "What’s the most embarrassing song you love?",
+      "Which player would survive longest on a deserted island?",
+      "Pick a player and give them a fake superhero name.",
+      "Who in this room is the best hype person and why?",
+      "What is a harmless habit you have that annoys people?",
+      "Which player has the strongest poker face?",
+      "What is your most-used emoji and why?",
+      "If this group had a team name, what would it be?",
+      "Which player would you trust to plan a trip?",
+      "What is a weird food combo you secretly like?",
+      "Which player is most likely to win a dance battle?",
+      "Name a player who would be the best DJ tonight.",
+      "What tiny thing instantly annoys you?",
+    ];
+
+    const ADMOB_INTERSTITIAL_IDS = {
+      ios: "ca-app-pub-3940256099942544/4411468910",
+      android: "ca-app-pub-3940256099942544/1033173712",
+    };
+    const AD_COOLDOWN_MS = 90000;
+    const PRIVACY_POLICY_URL = "https://akashsharma-2002.github.io/chaos-party-night/privacy-policy.html";
+    const STORAGE_KEYS = {
+      players: "chaosPlayers",
+      settings: "chaosSettings",
+      history: "chaosHistory",
+      adsPref: "chaosAdsPref",
+    };
+
+    let rng = createRng(Date.now());
+    let audioCtx = null;
+    let masterGain = null;
+    let tickInterval = null;
+    let bombTimer = null;
+    let timers = [];
+    let rouletteInterval = null;
+    let rouletteRunning = false;
+    let wheelSpin = null;
+    let wheelAngle = 0;
+    let selectedName = null;
+    let passFlashInterval = null;
+    let currentGame = 1;
+    let pendingPenaltyFromGame = 1;
+    let duelTimer = null;
+    let coinInterval = null;
+
+    const chaosFill = document.getElementById("chaosFill");
+    const chaosSlider = document.getElementById("chaosSlider");
+    const chaosDescriptor = document.getElementById("chaosDescriptor");
+    const passFlash = document.getElementById("passFlash");
+    const styleTag = document.getElementById("styleTag");
+    const penaltyStats = document.getElementById("penaltyStats");
+    const taskCard = document.getElementById("taskCard");
+    const taskText = document.getElementById("taskText");
+    const postStats = document.getElementById("postStats");
+    const penaltySub = document.getElementById("penaltySub");
+    const penaltyTitle = document.getElementById("penaltyTitle");
+    const gameTitle = document.getElementById("gameTitle");
+    const gameDescription = document.getElementById("gameDescription");
+    const duelScoreNodes = [document.getElementById("duelScore"), document.getElementById("duelScore2"), document.getElementById("duelScore3"), document.getElementById("duelScore4")];
+    const duelTaskLabels = [document.getElementById("duelTaskLabel"), document.getElementById("duelTaskLabel2"), document.getElementById("duelTaskLabel3"), document.getElementById("duelTaskLabel4")];
+
+    function createRng(seed) {
+      let state = seed >>> 0;
+      return () => {
+        state += 0x6D2B79F5;
+        let t = state;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function randomInRange(min, max) {
+      return min + (max - min) * rng();
+    }
+
+    function tempoForLevel(level) {
+      const [min, max] = rhythmTempoRanges[level] || [450, 550];
+      if (state.chaosLevel === 1) return randomInRange((min + max) / 2, max);
+      if (state.chaosLevel === 2) return randomInRange(min * 0.9 + max * 0.1, (min + max) / 2);
+      return randomInRange(min, (min + max) / 2);
+    }
+
+    const WHEEL_START = -Math.PI / 2; // wedges start at 12 o'clock
+    const POINTER_ANGLE = -Math.PI / 2; // pointer at top
+
+    function drawWheel(angle = 0) {
+      const canvas = document.getElementById("wheelCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const names = getPlayerList();
+      const total = names.length || 1;
+      const seg = (Math.PI * 2) / total;
+      wheelAngle = angle;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const center = canvas.width / 2;
+      const radius = center - 6;
+      const colors = ["#ff3b6a", "#45caff", "#ffd166", "#6cfab4", "#ff8fb1", "#63f5ff"];
+      for (let i = 0; i < total; i++) {
+        const start = angle + i * seg + WHEEL_START;
+        const end = start + seg;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, start, end);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.globalAlpha = 0.8;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(start + seg / 2);
+        ctx.textAlign = "right";
+        const rawName = names[i] || "Player";
+        const short = rawName.length > 12 ? rawName.slice(0, 9) + "…" : rawName;
+        const fontSize = total > 12 ? 12 : 14;
+        ctx.fillStyle = "#0b0816";
+        ctx.font = `bold ${fontSize}px Montserrat, sans-serif`;
+        ctx.fillText(short, radius - 12, 4);
+        ctx.restore();
+      }
+      ctx.beginPath();
+      ctx.arc(center, center, radius * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = "#0f0c29";
+      ctx.fill();
+    }
+
+    function indexFromAngle(angle, totalOverride) {
+      const total = Math.max(1, totalOverride || getPlayerList().length || 1);
+      const seg = (Math.PI * 2) / total;
+      const tau = Math.PI * 2;
+      const rot = ((angle % tau) + tau) % tau; // normalize
+      const pointerAt = ((POINTER_ANGLE - rot - WHEEL_START) % tau + tau) % tau;
+      return Math.floor(pointerAt / seg) % total;
+    }
+
+    function setScreen(name) {
+      Object.values(screens).forEach(el => el.classList.remove("active"));
+      const node = screens[name];
+      if (node) node.classList.add("active");
+      document.body.classList.toggle("flash", name === "game1Boom");
+      if (name === "post") {
+        maybeShowPostAd();
+      }
+    }
+
+    function clearTimers() {
+      timers.forEach(t => clearTimeout(t));
+      timers = [];
+      if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
+      if (bombTimer) { clearTimeout(bombTimer); bombTimer = null; }
+      if (rouletteInterval) { clearInterval(rouletteInterval); rouletteInterval = null; rouletteRunning = false; }
+      if (passFlashInterval) { clearInterval(passFlashInterval); passFlashInterval = null; }
+      if (duelTimer) { clearInterval(duelTimer); duelTimer = null; }
+      if (coinInterval) { clearInterval(coinInterval); coinInterval = null; }
+    }
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = state.settings.sound ? 0.3 : 0.0001;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function updateAudioSetting() {
+      if (masterGain) masterGain.gain.value = state.settings.sound ? 0.3 : 0.0001;
+    }
+
+    function vibrate(ms) {
+      if (state.settings.vibration && navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    function beep(freqStart, freqEnd, duration, type = "square", volume = 0.6) {
+      if (!audioCtx || !state.settings.sound) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freqStart, now);
+      osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(volume, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain).connect(masterGain);
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
+    }
+
+    const playTick = () => beep(800, 820, 0.18, "square", 0.12);
+    const playExplosion = () => beep(160, 28, 1.2, "sawtooth", 1.2);
+    const playBuzzer = () => beep(120, 80, 0.6, "square", 0.8);
+    const playCheer = () => beep(420, 880, 0.6, "triangle", 0.7);
+    const playClick = () => beep(900, 1100, 0.08, "square", 0.2);
+    const playCoinTick = () => beep(1500, 900, 0.12, "triangle", 0.25);
+    const playRollTick = () => beep(600, 900, 0.06, "square", 0.12);
+
+    const rhythmTempoRanges = {
+      easy: [450, 550],
+      medium: [340, 440],
+      hard: [270, 360], // slightly slower than before
+    };
+
+    function updateChaosUI() {
+      chaosDescriptor.textContent = chaosDescriptors[state.chaosLevel];
+      chaosFill.style.width = `${state.chaosLevel / 3 * 100}%`;
+      chaosFill.style.filter = `drop-shadow(0 0 10px rgba(255,59,106,${0.35 + state.chaosLevel * 0.15}))`;
+      chaosSlider.value = state.chaosLevel;
+    }
+
+    function renderNames() {
+      const chips = document.getElementById("nameChips");
+      chips.innerHTML = "";
+      state.players.forEach((name, idx) => {
+        const div = document.createElement("div");
+        div.className = "chip-name";
+        div.textContent = name;
+        const btn = document.createElement("button");
+        btn.className = "ghost";
+        btn.textContent = "×";
+        btn.addEventListener("click", () => {
+          state.players.splice(idx, 1);
+          savePlayers();
+          renderNames();
+        });
+        div.appendChild(btn);
+        chips.appendChild(div);
+      });
+      updateNameLimitUI();
+    }
+
+    function savePlayers() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(state.players));
+      } catch (e) { /* ignore */ }
+    }
+    function loadPlayers() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.players);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          state.players = Array.isArray(parsed) ? parsed.slice(0, 20) : [];
+          if (state.players.length > state.playerCount) {
+            state.players = state.players.slice(0, state.playerCount);
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    function saveSettings() {
+      const payload = {
+        chaosLevel: state.chaosLevel,
+        playerCount: state.playerCount,
+        settings: state.settings,
+      };
+      try {
+        localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(payload));
+      } catch (e) { /* ignore */ }
+    }
+
+    function loadSettings() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.settings);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.chaosLevel) {
+            const lvl = Math.max(1, Math.min(3, parseInt(parsed.chaosLevel, 10)));
+            state.chaosLevel = lvl;
+          }
+          if (parsed.playerCount) {
+            const count = Math.max(3, Math.min(20, parseInt(parsed.playerCount, 10)));
+            state.playerCount = count;
+          }
+          if (parsed.settings) {
+            state.settings = { ...state.settings, ...parsed.settings };
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    function loadPersistFlag() {
+      try {
+        const hasStored = !!(localStorage.getItem(STORAGE_KEYS.players) || localStorage.getItem(STORAGE_KEYS.settings));
+        state.persistAllowed = !hasStored;
+      } catch (e) {
+        state.persistAllowed = true;
+      }
+    }
+
+    function getPlayerList() {
+      return state.players.slice(0, 20);
+    }
+
+    function startParty() {
+      if (state.players.length !== state.playerCount) {
+        alert(`Add exactly ${state.playerCount} player names to start.`);
+        return false;
+      }
+      state.sessionId = Date.now().toString(36);
+      rng = createRng(Date.now());
+      state.lastGamePlayed = 1;
+      state.caughtName = null;
+      state.games = state.games.map(g => ({ ...g, unlocked: true }));
+      state.selectedGame = 0;
+      state.duel = { players: [], taskIndex: 0, taskPool: [], scores: [0,0], cracks: [0,0], draws: 0, coinAssign: null, coinResult: "" };
+      state.lie = { speaker: null, prompt: "", choice: null };
+      state.duelLeaderRole = "A";
+      if (state.persistAllowed) {
+        savePlayers();
+        saveSettings();
+        state.persistAllowed = false;
+      }
+      renderGameList();
+      updateSelectedGameInfo();
+      setScreen("pass");
+      return true;
+    }
+
+    function resetParty() {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.players);
+        localStorage.removeItem(STORAGE_KEYS.settings);
+        localStorage.removeItem(STORAGE_KEYS.history);
+      } catch (e) { /* ignore */ }
+      state.players = [];
+      state.playerCount = 6;
+      state.chaosLevel = 2;
+      state.settings = { sound: true, vibration: true, skipMode: true };
+      state.persistAllowed = true;
+      document.getElementById("playerCount").textContent = state.playerCount;
+      document.getElementById("btn-sound").textContent = "Sound: ON";
+      document.getElementById("btn-vibe").textContent = "Vibration: ON";
+      document.getElementById("nameInput").value = "";
+      updateChaosUI();
+      renderNames();
+      updateNameLimitUI();
+      alert("Party reset. Enter new names to start.");
+    }
+
+    function randomPlayer() {
+      if (state.players.length === 0) return "current holder";
+      return state.players[Math.floor(randomInRange(0, state.players.length))];
+    }
+
+    function randomTwoPlayers() {
+      const list = getPlayerList();
+      if (list.length < 2) return ["Player 1", "Player 2"];
+      const first = list[Math.floor(randomInRange(0, list.length))];
+      let second = first;
+      while (second === first) {
+        second = list[Math.floor(randomInRange(0, list.length))];
+      }
+      return [first, second];
+    }
+
+    function renderGameList() {
+      const list = document.getElementById("gameList");
+      list.innerHTML = "";
+      state.games.forEach((g, idx) => {
+        const item = document.createElement("div");
+        item.className = "game-item" + (state.selectedGame === idx ? " selected" : "");
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = g.name;
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.textContent = "Unlocked";
+        item.appendChild(name);
+        item.appendChild(chip);
+        item.addEventListener("click", () => {
+          state.selectedGame = idx;
+          updateSelectedGameInfo();
+          renderGameList();
+        });
+        list.appendChild(item);
+      });
+    }
+
+    function updateNameLimitUI() {
+      const hint = document.getElementById("nameLimitHint");
+      const remaining = state.playerCount - state.players.length;
+      if (hint) {
+        const remainingText = remaining > 0
+          ? `Add ${remaining} more name${remaining === 1 ? "" : "s"} to start.`
+          : remaining === 0
+            ? "All set. Ready to start."
+            : "Too many names. Remove extras.";
+        hint.textContent = `Add exactly ${state.playerCount} names. ${remainingText}`;
+      }
+      const input = document.getElementById("nameInput");
+      const addBtn = document.getElementById("btn-add-name");
+      const atLimit = state.players.length >= state.playerCount;
+      if (input) input.disabled = atLimit;
+      if (addBtn) addBtn.disabled = atLimit;
+    }
+
+    let admobInitialized = false;
+    let admobBusy = false;
+    let lastAdAt = 0;
+
+    function getPlatform() {
+      const cap = window.Capacitor;
+      if (cap && typeof cap.getPlatform === "function") return cap.getPlatform();
+      return "web";
+    }
+
+    function getAdMobPlugin() {
+      const cap = window.Capacitor;
+      if (!cap || !cap.Plugins) return null;
+      if (typeof cap.isNativePlatform === "function" && !cap.isNativePlatform()) return null;
+      return cap.Plugins.AdMob || null;
+    }
+
+    async function initAdMob() {
+      if (admobInitialized) return;
+      const AdMob = getAdMobPlugin();
+      if (!AdMob) return;
+      try {
+        await AdMob.initialize({ requestTrackingAuthorization: true, initializeForTesting: false });
+        admobInitialized = true;
+      } catch (e) {
+        // ignore init failures on web
+      }
+    }
+
+    function loadAdsPreference() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.adsPref);
+        if (stored === "personalized" || stored === "nonpersonalized") {
+          state.ads.preference = stored;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    function saveAdsPreference(pref) {
+      state.ads.preference = pref;
+      try {
+        localStorage.setItem(STORAGE_KEYS.adsPref, pref);
+      } catch (e) { /* ignore */ }
+      updateAdsStatusUI();
+    }
+
+    function updateAdsStatusUI() {
+      const status = document.getElementById("adsStatus");
+      const pref = state.ads.preference === "personalized"
+        ? "Personalized"
+        : state.ads.preference === "nonpersonalized"
+          ? "Non-personalized"
+          : "Not set";
+      if (status) status.textContent = `Ads preference: ${pref}`;
+    }
+
+    function showPrivacyModal(forceChoice = false) {
+      const modal = document.getElementById("privacyModal");
+      const closeBtn = document.getElementById("btn-ads-close");
+      const resetBtn = document.getElementById("btn-ads-reset-consent");
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+      if (closeBtn) closeBtn.style.display = forceChoice ? "none" : "inline-flex";
+      if (resetBtn) resetBtn.style.display = forceChoice ? "none" : "inline-flex";
+    }
+
+    function hidePrivacyModal() {
+      const modal = document.getElementById("privacyModal");
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    async function applyConsentFlow(wantsPersonalized) {
+      const AdMob = getAdMobPlugin();
+      if (!AdMob) return;
+      await initAdMob();
+      if (wantsPersonalized && getPlatform() === "ios") {
+        try {
+          const trackingInfo = await AdMob.trackingAuthorizationStatus();
+          if (trackingInfo.status === "notDetermined") {
+            await AdMob.requestTrackingAuthorization();
+          }
+        } catch (e) { /* ignore */ }
+      }
+      try {
+        let consentInfo = await AdMob.requestConsentInfo();
+        if (consentInfo.isConsentFormAvailable && consentInfo.status === "REQUIRED") {
+          consentInfo = await AdMob.showConsentForm();
+        }
+        state.ads.canRequest = consentInfo.canRequestAds !== false;
+      } catch (e) {
+        state.ads.canRequest = true;
+      }
+    }
+
+    async function setAdsPreference(pref) {
+      saveAdsPreference(pref);
+      await applyConsentFlow(pref === "personalized");
+    }
+
+    async function resetAdsConsent() {
+      const AdMob = getAdMobPlugin();
+      if (AdMob) {
+        try { await AdMob.resetConsentInfo(); } catch (e) { /* ignore */ }
+      }
+      try { localStorage.removeItem(STORAGE_KEYS.adsPref); } catch (e) { /* ignore */ }
+      state.ads.preference = "unknown";
+      state.ads.canRequest = false;
+      updateAdsStatusUI();
+      showPrivacyModal(true);
+    }
+
+    function initPrivacyFlow() {
+      const link = document.getElementById("privacyLink");
+      if (link) link.href = PRIVACY_POLICY_URL;
+      loadAdsPreference();
+      updateAdsStatusUI();
+      if (state.ads.preference === "unknown") {
+        showPrivacyModal(true);
+      } else {
+        applyConsentFlow(state.ads.preference === "personalized");
+      }
+    }
+
+    async function maybeShowPostAd() {
+      const AdMob = getAdMobPlugin();
+      if (!AdMob) return;
+      const platform = getPlatform();
+      if (platform !== "ios" && platform !== "android") return;
+      if (state.ads.preference === "unknown" || !state.ads.canRequest) return;
+      const adId = ADMOB_INTERSTITIAL_IDS[platform];
+      if (!adId || adId.includes("xxxxxxxx")) return;
+      const now = Date.now();
+      if (admobBusy || now - lastAdAt < AD_COOLDOWN_MS) return;
+      admobBusy = true;
+      await initAdMob();
+      try {
+        await AdMob.prepareInterstitial({ adId, npa: state.ads.preference !== "personalized" });
+        await AdMob.showInterstitial();
+        lastAdAt = Date.now();
+      } catch (e) {
+        // ignore ad failures to avoid blocking gameplay
+      } finally {
+        admobBusy = false;
+      }
+    }
+
+    function updateSelectedGameInfo() {
+      const current = state.games[state.selectedGame];
+      if (!current) return;
+      gameTitle.textContent = current.name;
+      gameDescription.textContent = current.desc;
+    }
+
+    function unlockNextGame() {
+      // With all games unlocked, just move selection forward if possible.
+      if (state.selectedGame < state.games.length - 1) {
+        state.selectedGame += 1;
+      }
+      renderGameList();
+      updateSelectedGameInfo();
+    }
+
+    function goLobby() {
+      renderGameList();
+      updateSelectedGameInfo();
+      setScreen("pass");
+    }
+
+    function startSelectedGame() {
+      const current = state.games[state.selectedGame];
+      if (!current || !current.unlocked) return;
+      if (current.id === 0) {
+        startGame1Intro();
+      } else if (current.id === 1) {
+        startGame2Select();
+      } else if (current.id === 2) {
+        startDuelIntro();
+      } else if (current.id === 3) {
+        startLieIntro();
+      } else {
+        alert("This game is locked for now. More chaos coming soon.");
+      }
+    }
+
+    function renderCaughtList() {
+      const list = document.getElementById("caughtList");
+      list.innerHTML = "";
+      getPlayerList().forEach(name => {
+        const chip = document.createElement("div");
+        chip.className = "chip-name";
+        chip.textContent = name;
+        chip.addEventListener("click", () => {
+          state.caughtName = name;
+          state.lastLoser = name;
+          showPenalty(1);
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    function startDuelIntro() {
+      currentGame = 3;
+      resetDuel();
+      setScreen("duelIntro");
+    }
+
+    function resetDuel() {
+      state.duel = { players: [], taskIndex: 0, taskPool: [], scores: [0, 0], cracks: [0,0], draws: 0, coinAssign: null, coinResult: "" };
+      state.duelLeaderRole = "A";
+      updateDuelScoreUI();
+    }
+
+    function buildDuelTaskPool() {
+      const pool = [];
+      const used = new Set();
+      while (pool.length < 3 && used.size < duelTasks.length) {
+        const idx = Math.floor(randomInRange(0, duelTasks.length));
+        if (used.has(idx)) continue;
+        used.add(idx);
+        pool.push(duelTasks[idx]);
+      }
+      state.duel.taskPool = pool.length ? pool : duelTasks.slice(0, 3);
+    }
+
+    function getDuelTask() {
+      return state.duel.taskPool[state.duel.taskIndex] || duelTasks[state.duel.taskIndex];
+    }
+
+    function getDuelTotalTasks() {
+      return state.duel.taskPool.length || 3;
+    }
+
+    function rollDuelPlayers() {
+      const names = getPlayerList();
+      if (names.length < 2) {
+        state.duel.players = ["Player A", "Player B"];
+        buildDuelTaskPool();
+        document.getElementById("duelP1").textContent = "Player 1: Player A";
+        document.getElementById("duelP2").textContent = "Player 2: Player B";
+        document.getElementById("duelSelected").textContent = "Selected: Player A & Player B";
+        setTimeout(() => {
+          renderDuelTaskBrief();
+          setScreen("duelTaskBrief");
+        }, 4000);
+        return;
+      }
+      let elapsed = 0;
+      let delay = 80;
+      const total = randomInRange(8000, 11000);
+      function step() {
+        elapsed += delay;
+        let p1 = names[Math.floor(randomInRange(0, names.length))];
+        let p2 = p1;
+        while (p2 === p1) p2 = names[Math.floor(randomInRange(0, names.length))];
+        document.getElementById("duelP1").textContent = `Player 1: ${p1}`;
+        document.getElementById("duelP2").textContent = `Player 2: ${p2}`;
+        playRollTick();
+        if (elapsed >= total) {
+          state.duel.players = [p1, p2];
+          state.duel.scores = [0, 0];
+          state.duel.cracks = [0, 0];
+          state.duel.draws = 0;
+          state.duel.coinAssign = null;
+          state.duel.coinResult = "";
+          state.duel.taskIndex = 0;
+          buildDuelTaskPool();
+          document.getElementById("duelSelected").textContent = `Selected: ${p1} & ${p2}`;
+          updateDuelScoreUI();
+          setTimeout(() => {
+            renderDuelTaskBrief();
+            setScreen("duelTaskBrief");
+          }, 4000);
+          return;
+        }
+        const progress = Math.min(1, elapsed / total);
+        delay = 80 + (320 - 80) * progress;
+        setTimeout(step, delay);
+      }
+      step();
+    }
+
+    function startDuelPick() {
+      currentGame = 3;
+      rollDuelPlayers();
+      setScreen("duelPick");
+    }
+
+    function promptCoinChoice() {
+      // no-op placeholder; choice handled via buttons
+      return !!state.duel.coinAssign;
+    }
+
+    function duelLockIn() {
+      state.duel.taskIndex = 0;
+      setScreen("duelTaskBrief");
+      renderDuelTaskBrief();
+    }
+
+    function renderDuelTaskBrief() {
+      const task = getDuelTask();
+      const p1 = state.duel.players[0] || "Player A";
+      const p2 = state.duel.players[1] || "Player B";
+      duelTaskLabels.forEach(l => l.textContent = `TASK ${state.duel.taskIndex + 1}/${getDuelTotalTasks()}`);
+      document.getElementById("duelTaskTitle").textContent = task.name;
+      let subtitle = task.rule;
+      document.getElementById("coinChoiceRow").style.display = task.type === "coin" ? "grid" : "none";
+      if (task.type === "coin") {
+        subtitle = `${p1}: choose Heads or Tails. ${p2} gets the other.`;
+        // reset assignment until user picks
+        state.duel.coinAssign = null;
+        state.duel.coinResult = "";
+      }
+      document.getElementById("duelTaskSubtitle").textContent = subtitle;
+      document.getElementById("duelVs").textContent = `${p1} vs ${p2}`;
+      updateDuelScoreUI();
+    }
+
+    function setCoinChoice(headsForA) {
+      const p1 = state.duel.players[0] || "Player A";
+      const p2 = state.duel.players[1] || "Player B";
+      if (headsForA) {
+        state.duel.coinAssign = { heads: 0, tails: 1 };
+        document.getElementById("duelTaskSubtitle").textContent = `${p1}: Heads | ${p2}: Tails`;
+      } else {
+        state.duel.coinAssign = { heads: 1, tails: 0 };
+        document.getElementById("duelTaskSubtitle").textContent = `${p1}: Tails | ${p2}: Heads`;
+      }
+    }
+
+    function startDuelCountdown() {
+      setScreen("duelCountdown");
+      let val = 3;
+      const cd = document.getElementById("duelCountdown");
+      cd.textContent = val;
+      const interval = setInterval(() => {
+        val -= 1;
+        cd.textContent = val <= 0 ? "GO!" : val;
+        playTick();
+        if (val <= 0) {
+          clearInterval(interval);
+          timers.push(setTimeout(startDuelActive, 500));
+        }
+      }, 850);
+      timers.push(interval);
+    }
+
+    function startDuelActive() {
+      clearTimers();
+      const task = getDuelTask();
+      const duration = task.times[state.chaosLevel] || task.times[1];
+      document.getElementById("duelActiveTitle").textContent = task.name;
+      if (task.type === "coin") {
+        const p1 = state.duel.players[0] || "Player A";
+        const p2 = state.duel.players[1] || "Player B";
+        // Require a coin assignment first
+        if (!state.duel.coinAssign) {
+          // require choice before flipping
+          document.getElementById("duelActiveSubtitle").textContent = "Choose Heads or Tails first.";
+          document.getElementById("duelTaskHint").textContent = "";
+          return;
+        }
+        const headsName = state.duel.coinAssign.heads === 0 ? p1 : p2;
+        const tailsName = state.duel.coinAssign.tails === 0 ? p1 : p2;
+        document.getElementById("duelActiveSubtitle").textContent = `${headsName}: Heads | ${tailsName}: Tails`;
+        document.getElementById("duelTaskHint").textContent = "Coin is spinning...";
+        setScreen("duelActive");
+        let elapsed = 0;
+        let delay = 90;
+        const total = randomInRange(10000, 15000); // 10-15s
+        function flipStep() {
+          elapsed += delay;
+          const face = Math.random() > 0.5 ? "HEADS" : "TAILS";
+          document.getElementById("duelTimer").textContent = face;
+          playCoinTick();
+          if (elapsed >= total) {
+            const finalHead = Math.random() > 0.5;
+            const winnerIdx = finalHead ? state.duel.coinAssign.heads : state.duel.coinAssign.tails;
+            document.getElementById("duelTimer").textContent = finalHead ? "HEADS" : "TAILS";
+            const winnerName = winnerIdx === 0 ? headsName : tailsName;
+            state.duel.coinResult = `Coin: ${finalHead ? "HEADS" : "TAILS"} → ${winnerName}`;
+            setTimeout(() => awardDuelPoint(winnerIdx, false), 700);
+            return;
+          }
+          const progress = Math.min(1, elapsed / total);
+          delay = 90 + (420 - 90) * progress; // ease to slower spins
+          coinInterval = setTimeout(flipStep, delay);
+        }
+        flipStep();
+        return;
+      } else {
+        document.getElementById("duelActiveSubtitle").textContent = task.rule;
+        document.getElementById("duelTaskHint").textContent = task.hints;
+      }
+      updateDuelScoreUI();
+      setScreen("duelActive");
+      let remaining = duration;
+      const timerEl = document.getElementById("duelTimer");
+      timerEl.textContent = remaining;
+      duelTimer = setInterval(() => {
+        remaining -= 1;
+        timerEl.textContent = remaining;
+        if (remaining <= 5 && remaining > 0) playTick();
+        if (remaining <= 0) {
+          clearInterval(duelTimer);
+          duelTimer = null;
+          goDuelJudge();
+        }
+      }, 1000);
+    }
+
+    function goDuelJudge() {
+      updateDuelScoreUI();
+      document.getElementById("btn-duel-none").style.display = "block";
+      document.getElementById("btn-duel-a").textContent = `${state.duel.players[0] || "Player A"} cracked`;
+      document.getElementById("btn-duel-b").textContent = `${state.duel.players[1] || "Player B"} cracked`;
+      document.getElementById("btn-duel-none").textContent = "Draw / No one";
+      setScreen("duelJudge");
+    }
+
+    function awardDuelPoint(winnerIndex, allowNone = false) {
+      let pointText = "";
+      if (winnerIndex === null && allowNone) {
+        pointText = "NO POINT";
+        state.duel.draws += 1;
+      } else {
+        const loser = winnerIndex === 0 ? 1 : 0;
+        state.duel.scores[winnerIndex] += 1;
+        state.duel.cracks[loser] += 1;
+        pointText = `POINT TO ${state.duel.players[winnerIndex] || "Player"}`;
+        state.caughtName = state.duel.players[loser] || "Player";
+        state.lastLoser = state.caughtName;
+      }
+      updateDuelScoreUI();
+      document.getElementById("duelPointTitle").textContent = pointText;
+      const coinInfo = state.duel.coinResult ? `${state.duel.coinResult} | ` : "";
+      document.getElementById("duelPointSub").textContent = `${coinInfo}A:${state.duel.scores[0]} | B:${state.duel.scores[1]}`;
+      setScreen("duelPoint");
+      timers.push(setTimeout(checkDuelProgress, 900));
+    }
+
+    function determineDuelWinner() {
+      const { scores, cracks, draws } = state.duel;
+      if (scores[0] > scores[1]) return 0;
+      if (scores[1] > scores[0]) return 1;
+      if (cracks[0] < cracks[1]) return 0;
+      if (cracks[1] < cracks[0]) return 1;
+      if (draws === getDuelTotalTasks()) return "both";
+      return "both"; // if completely tied, both win
+    }
+
+    function checkDuelProgress() {
+      const tasksDone = state.duel.taskIndex + 1 >= getDuelTotalTasks();
+      if (tasksDone) {
+        const resolved = determineDuelWinner();
+        if (resolved !== null) {
+          showDuelWinner(resolved);
+        } else {
+          showDuelWinner("both");
+        }
+        return;
+      }
+      state.duel.taskIndex += 1;
+      renderDuelTaskBrief();
+      setScreen("duelTaskBrief");
+    }
+
+    function showDuelWinner(index) {
+      if (index === "both") {
+        const p1 = state.duel.players[0] || "Player A";
+        const p2 = state.duel.players[1] || "Player B";
+        document.getElementById("duelWinnerTitle").textContent = `WINNERS: ${p1} & ${p2} 🏆`;
+        state.caughtName = null;
+        state.lastLoser = "both";
+      } else {
+        const winner = state.duel.players[index] || "Player";
+        const loser = state.duel.players[index === 0 ? 1 : 0] || "Player";
+        state.caughtName = loser;
+        state.lastLoser = loser;
+        document.getElementById("duelWinnerTitle").textContent = `WINNER: ${winner} 🏆`;
+      }
+      setScreen("duelWinner");
+    }
+
+    function updateDuelScoreUI() {
+      duelScoreNodes.forEach(node => {
+        if (node) node.textContent = `A:${state.duel.scores[0]} | B:${state.duel.scores[1]}`;
+      });
+      duelTaskLabels.forEach(l => {
+        if (l) l.textContent = `TASK ${state.duel.taskIndex + 1}/${getDuelTotalTasks()}`;
+      });
+    }
+
+    function resetRhythm() {
+      state.rhythm = {
+        player: null,
+        currentLevel: "easy",
+        round: 1,
+        unlocked: { easy: true, medium: false, hard: false },
+        cleared: { easy: false, medium: false, hard: false },
+        usedIndices: { easy: [], medium: [], hard: [] },
+        currentSequence: [],
+      };
+      updateLevelCards();
+    }
+
+    function updateLevelCards() {
+      const playerLabel = document.getElementById("levelPlayer");
+      playerLabel.textContent = `Up next: ${state.rhythm.player || "—"}`;
+      const easy = document.getElementById("card-easy");
+      const med = document.getElementById("card-medium");
+      const hard = document.getElementById("card-hard");
+      easy.classList.toggle("locked", false);
+      med.classList.toggle("locked", !state.rhythm.unlocked.medium);
+      hard.classList.toggle("locked", !state.rhythm.unlocked.hard);
+      easy.querySelector(".chip").textContent = state.rhythm.cleared.easy ? "Cleared" : "Unlocked";
+      med.querySelector(".chip").textContent = state.rhythm.cleared.medium ? "Cleared" : (state.rhythm.unlocked.medium ? "Unlocked" : "Locked");
+      hard.querySelector(".chip").textContent = state.rhythm.cleared.hard ? "Cleared" : (state.rhythm.unlocked.hard ? "Unlocked" : "Locked");
+    }
+
+    function goLevelSelect() {
+      if (!state.rhythm.player) { alert("Spin to pick a player first."); return; }
+      document.getElementById("btn-go-medium").style.display = "none";
+      document.getElementById("btn-go-hard").style.display = "none";
+      document.getElementById("btn-replay-level").style.display = "none";
+      document.getElementById("btn-next-game-result").style.display = "none";
+      updateLevelCards();
+      setScreen("levelSelect");
+    }
+
+    function selectLevel(level) {
+      if (!state.rhythm.unlocked[level]) return;
+      state.rhythm.currentLevel = level;
+      state.rhythm.round = 1;
+      state.rhythm.usedIndices[level] = [];
+      state.rhythm.currentSequence = [];
+      enterRound();
+    }
+
+    function enterRound() {
+      const levelLabel = state.rhythm.currentLevel.toUpperCase();
+      pickSequenceForRound();
+      document.getElementById("roundHeader").textContent = `${levelLabel} — Round ${state.rhythm.round}/3`;
+      document.getElementById("roundPlayer").textContent = `Player: ${state.rhythm.player || "—"}`;
+      setScreen("round");
+    }
+
+    function startRhythmCountdown() {
+      clearTimers();
+      setScreen("game2Challenge");
+      const countdownEl = document.getElementById("twisterCountdown");
+      countdownEl.textContent = "3";
+      document.getElementById("sequenceLabel").textContent = `Level: ${state.rhythm.currentLevel.toUpperCase()} | Round ${state.rhythm.round}/3`;
+      renderSequenceWords();
+      let value = 3;
+      const interval = setInterval(() => {
+        value -= 1;
+        countdownEl.textContent = value <= 0 ? "GO!" : value;
+        playTick();
+        vibrate(40);
+        if (value <= 0) {
+          clearInterval(interval);
+          timers.push(setTimeout(runSequence, 600));
+        }
+      }, 850);
+      timers.push(interval);
+    }
+
+    function renderSequenceWords(activeIndex = -1) {
+      const row = document.getElementById("sequenceWords");
+      row.innerHTML = "";
+      const seq = getCurrentSequence();
+      seq.forEach((word, idx) => {
+        const chip = document.createElement("div");
+        chip.className = "word-chip" + (idx === activeIndex ? " active" : "");
+        chip.textContent = word;
+        row.appendChild(chip);
+      });
+    }
+
+    function pickSequenceForRound() {
+      const level = state.rhythm.currentLevel;
+      const sequences = rhythmSequences[level] || [];
+      if (!state.rhythm.usedIndices[level]) state.rhythm.usedIndices[level] = [];
+      const used = state.rhythm.usedIndices[level];
+      let available = sequences.map((_, i) => i).filter(i => !used.includes(i));
+      if (available.length === 0) {
+        used.length = 0;
+        available = sequences.map((_, i) => i);
+      }
+      const idx = available[Math.floor(randomInRange(0, Math.max(1, available.length)))];
+      used.push(idx);
+      state.rhythm.currentSequence = sequences[idx] || [];
+    }
+
+    function getCurrentSequence() {
+      return state.rhythm.currentSequence || [];
+    }
+
+    function runSequence() {
+      const seq = getCurrentSequence();
+      const tempo = tempoForLevel(state.rhythm.currentLevel);
+      let i = 0;
+      function step() {
+        if (i > 0) renderSequenceWords(i - 1);
+        if (i < seq.length) {
+          renderSequenceWords(i);
+          playTick();
+          vibrate(40);
+          i += 1;
+          timers.push(setTimeout(step, tempo));
+        } else {
+          renderSequenceWords(seq.length - 1);
+          timers.push(setTimeout(() => setScreen("judge"), 400));
+        }
+      }
+      step();
+    }
+
+
+    function startGame1Intro() {
+      currentGame = 1;
+      setScreen("game1Intro");
+    }
+
+    function startGame1Play() {
+      clearTimers();
+      state.caughtName = null;
+      setScreen("game1Play");
+      styleTag.textContent = state.chaosLevel === 1 ? "Chill pace" : state.chaosLevel === 2 ? "Wild pace" : "Insane pace";
+      const [min, max] = game1Durations[state.chaosLevel];
+      const duration = Math.round(randomInRange(min, max));
+      tickInterval = setInterval(playTick, randomInRange(0.55, 0.9) * 1000);
+      timers.push(setTimeout(() => {
+        if (tickInterval) { clearInterval(tickInterval); tickInterval = setInterval(playTick, randomInRange(0.3, 0.5) * 1000); }
+      }, randomInRange(2500, 6000)));
+      passFlashInterval = setInterval(() => {
+        passFlash.style.opacity = Math.random() > 0.5 ? 1 : 0.25;
+      }, 650);
+      startPanicMoments(duration);
+      bombTimer = setTimeout(triggerBoom, duration * 1000);
+    }
+
+    function triggerBoom() {
+      clearTimers();
+      setScreen("game1Boom");
+      playExplosion();
+      vibrate([180, 80, 180]);
+      document.body.classList.add("flash");
+      document.body.classList.add("strobe");
+      timers.push(setTimeout(() => {
+        document.body.classList.remove("flash");
+        document.body.classList.remove("strobe");
+      }, 900));
+      timers.push(setTimeout(() => setScreen("caught"), 1200));
+    }
+
+    function showPenalty(gameNumber) {
+      pendingPenaltyFromGame = gameNumber;
+      penaltyTitle.textContent = gameNumber === 1 ? "Penalty" : gameNumber === 2 ? "Rhythm Read Penalty" : gameNumber === 3 ? "Duel Penalty" : "Lie Engine Penalty";
+      if (gameNumber === 3 && !state.caughtName) {
+        penaltySub.textContent = "Both won. Decide who drinks (not you two).";
+      } else if (gameNumber === 4 && state.lastLoser === "Room") {
+        penaltySub.textContent = "Room lost. Host picks who drinks.";
+      } else {
+        penaltySub.textContent = "Choose now.";
+      }
+      taskCard.style.display = "none";
+      penaltyStats.textContent = state.caughtName ? `Caught: ${state.caughtName}` : "";
+      setScreen("penalty");
+    }
+
+    function pickTask() {
+      const task = skipTasks[Math.floor(randomInRange(0, skipTasks.length))];
+      taskText.textContent = task;
+      taskCard.style.display = "block";
+      penaltySub.textContent = "Skip? Complete the task.";
+    }
+
+    function goPostRound(chosenPenalty) {
+      const lastGame = currentGame;
+      state.lastGamePlayed = currentGame;
+      const caught = state.caughtName || "Unknown";
+      state.lastLoser = caught;
+      postStats.textContent = `Game ${lastGame} | Caught: ${caught} | Penalty: ${chosenPenalty}`;
+      setScreen("post");
+    }
+
+    function nextGame() {
+      unlockNextGame();
+      goLobby();
+    }
+
+    function changeGame() {
+      goLobby();
+    }
+
+    function launchCurrentGame() {
+      if (currentGame === 1) {
+        startGame1Intro();
+      } else if (currentGame === 2) {
+        setScreen("game2Intro");
+      } else if (currentGame === 3) {
+        startDuelIntro();
+      } else {
+        goLobby();
+      }
+    }
+
+    function startGame2Select() {
+      currentGame = 2;
+      setScreen("game2Select");
+      state.caughtName = null;
+      resetRhythm();
+      document.getElementById("btn-start-rhythm").disabled = true;
+      drawWheel();
+      document.getElementById("btn-spin").disabled = false;
+      document.getElementById("rouletteStatus").textContent = "Tap or shake to spin.";
+      document.getElementById("passingTag").textContent = "Passing: —";
+    }
+
+    function spinRoulette() {
+      if (wheelSpin) return;
+      const btn = document.getElementById("btn-spin");
+      btn.disabled = true;
+      const names = getPlayerList();
+      const chaos = state.chaosLevel;
+      const duration = chaos === 1 ? randomInRange(3.5, 4.5) : chaos === 2 ? randomInRange(4, 6) : randomInRange(6, 8);
+      const spins = chaos === 3 ? randomInRange(8, 11) : randomInRange(6, 9);
+      const targetIndex = Math.floor(randomInRange(0, names.length));
+      const anglePer = (Math.PI * 2) / names.length;
+      const targetAngle = targetIndex * anglePer + anglePer / 2;
+      const totalAngle = spins * Math.PI * 2 + targetAngle + randomInRange(-0.1, 0.1);
+      const start = performance.now();
+      const label = document.getElementById("rouletteStatus");
+      const passingTag = document.getElementById("passingTag");
+      label.textContent = "Spinning...";
+      wheelSpin = true;
+      let lastClickTime = 0;
+
+      function step(now) {
+        const t = Math.min((now - start) / (duration * 1000), 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const angle = totalAngle * eased + Math.sin(t * Math.PI * 4) * 0.02 * (1 - t); // micro-bounce
+        drawWheel(angle);
+        const currentIndex = indexFromAngle(angle, names.length);
+        passingTag.textContent = `Passing: ${names[currentIndex] || "?"}`;
+        if (t < 0.98 && now - lastClickTime > 110) { playClick(); lastClickTime = now; }
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          wheelSpin = false;
+          selectedName = names[currentIndex] || names[0];
+          state.lastLoser = selectedName;
+          state.caughtName = selectedName;
+          playTick();
+          vibrate(80);
+          label.textContent = "Result!";
+          passingTag.textContent = `UP NEXT: ${selectedName}`;
+          state.rhythm.player = selectedName;
+          updateLevelCards();
+          document.getElementById("btn-start-rhythm").disabled = false;
+          btn.disabled = false;
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function startGame2Challenge() {
+      clearTimers();
+      startRhythmCountdown();
+    }
+
+    function startPanicMoments(totalDuration) {
+      const panic = document.getElementById("panicMessage");
+      const messages = ["PASS!!", "FASTER!", "DON'T HOLD IT!", "MOVE!"];
+      function trigger() {
+        const msg = messages[Math.floor(randomInRange(0, messages.length))];
+        panic.textContent = msg;
+        panic.style.opacity = 1;
+        panic.classList.remove("shake");
+        void panic.offsetWidth;
+        panic.classList.add("shake");
+        vibrate(80);
+        beep(1200, 400, 0.25, "sawtooth", 0.35);
+        timers.push(setTimeout(() => { panic.style.opacity = 0; }, 400));
+        const next = randomInRange(2000, 6000);
+        timers.push(setTimeout(() => {
+          if (screens.game1Play.classList.contains("active")) trigger();
+        }, next));
+      }
+      trigger();
+      timers.push(setTimeout(() => { panic.style.opacity = 0; }, totalDuration * 1000));
+    }
+
+    function handleJudgePass() {
+      if (state.rhythm.round < 3) {
+        state.rhythm.round += 1;
+        enterRound();
+        playCheer();
+        vibrate(60);
+      } else {
+        state.rhythm.cleared[state.rhythm.currentLevel] = true;
+        if (state.rhythm.currentLevel === "easy") state.rhythm.unlocked.medium = true;
+        setLevelComplete();
+      }
+    }
+
+    function handleJudgeFail() {
+      playBuzzer();
+      vibrate([120, 50, 120]);
+      state.caughtName = state.rhythm.player || "You";
+      state.lastLoser = state.caughtName;
+      showPenalty(2);
+    }
+
+    function setLevelComplete() {
+      const title = document.getElementById("resultTitle");
+      const sub = document.getElementById("resultSubtitle");
+      title.textContent = "LEVEL CLEARED ✅";
+      document.getElementById("btn-go-medium").style.display = "none";
+      document.getElementById("btn-go-hard").style.display = "none";
+      if (state.rhythm.currentLevel === "easy") {
+        state.rhythm.unlocked.medium = true;
+        sub.textContent = "Medium unlocked!";
+        document.getElementById("btn-go-medium").style.display = "inline-block";
+      } else if (state.rhythm.currentLevel === "medium") {
+        state.rhythm.unlocked.hard = true;
+        sub.textContent = "Hard unlocked!";
+        document.getElementById("btn-go-hard").style.display = "inline-block";
+      } else {
+        sub.textContent = "Great run.";
+      }
+      state.lastGamePlayed = 2;
+      document.getElementById("btn-replay-level").style.display = "inline-block";
+      document.getElementById("btn-next-game-result").style.display = "inline-block";
+      updateLevelCards();
+      setScreen("result");
+    }
+
+    // Lie Engine tracking for multiple rounds
+    function resetLieRounds() {
+      state.lie.round = 1;
+      state.lie.score = { speaker: 0, room: 0 };
+    }
+
+    // Lie Engine flow
+    function startLieIntro() {
+      currentGame = 4;
+      setScreen("lieIntro");
+    }
+
+    function startLieSpeaker() {
+      resetLieRounds();
+      setScreen("lieSpeaker");
+      rollLieSpeaker();
+    }
+
+    function rollLieSpeaker() {
+      const names = getPlayerList();
+      if (!names.length) {
+        state.lie.speaker = "Speaker";
+        document.getElementById("lieSpeakerTag").textContent = "Speaker: Speaker";
+        document.getElementById("lieSelected").textContent = "Selected: Speaker";
+        setTimeout(() => lieReadyCountdown(), 1200);
+        return;
+      }
+      let elapsed = 0;
+      let delay = 70;
+      const total = randomInRange(3000, 4000);
+      function step() {
+        elapsed += delay;
+        const pick = names[Math.floor(randomInRange(0, names.length))];
+        document.getElementById("lieSpeakerTag").textContent = `Speaker: ${pick}`;
+        playRollTick();
+        if (elapsed >= total) {
+          resetLieRounds();
+          state.lie.speaker = pick;
+          state.lie.choice = null;
+          state.lie.prompt = "";
+          document.getElementById("lieSelected").textContent = `Selected: ${pick}`;
+          setTimeout(() => lieReadyCountdown(), 4000);
+          return;
+        }
+        const progress = Math.min(1, elapsed / total);
+        delay = 70 + (320 - 70) * progress;
+        setTimeout(step, delay);
+      }
+      step();
+    }
+
+    function lockLieSpeaker() {
+      const prompt = liePrompts[Math.floor(randomInRange(0, liePrompts.length))] || "Tell a story.";
+      state.lie.prompt = prompt;
+      state.lie.choice = null;
+      state.lie.round = state.lie.round || 1;
+      document.getElementById("liePromptTitle").textContent = "Prompt";
+      document.getElementById("liePromptText").textContent = prompt;
+      setScreen("liePrompt");
+    }
+
+    function lieReadyCountdown() {
+      clearTimers();
+      const speaker = state.lie.speaker || "Speaker";
+      document.getElementById("lieReadyTitle").textContent = `${speaker}, get ready`;
+      document.getElementById("lieReadySub").textContent = "Get ready to trick the room.";
+      setScreen("lieReady");
+      let count = 5;
+      document.getElementById("lieReadyCountdown").textContent = count;
+      const interval = setInterval(() => {
+        count -= 1;
+        playTick();
+        document.getElementById("lieReadyCountdown").textContent = count;
+        if (count <= 0) {
+          clearInterval(interval);
+          lockLieSpeaker();
+        }
+      }, 900);
+      timers.push(interval);
+    }
+
+    function lieRoomCountdown(nextFn, subtitle) {
+      clearTimers();
+      document.getElementById("lieRoomSub").textContent = subtitle || "Room: don’t get tricked by the speaker.";
+      setScreen("lieRoom");
+      let count = 5;
+      document.getElementById("lieRoomCountdown").textContent = count;
+      const interval = setInterval(() => {
+        count -= 1;
+        playTick();
+        document.getElementById("lieRoomCountdown").textContent = count;
+        if (count <= 0) {
+          clearInterval(interval);
+          if (typeof nextFn === "function") nextFn();
+        }
+      }, 900);
+      timers.push(interval);
+    }
+
+    function setLieChoice(choice) {
+      state.lie.choice = choice; // "truth" or "lie"
+      lieRoomCountdown(startLieVote, "Room: don’t get tricked by the speaker.");
+    }
+
+    function startLieVote() {
+      setScreen("lieVote");
+    }
+
+    function handleLieVote(roomGuess) {
+      clearTimers();
+      const actual = state.lie.choice || "truth";
+      const speakerLoses = roomGuess === actual;
+      if (speakerLoses) {
+        state.lie.score.speaker += 1;
+        state.lastLoser = state.lie.speaker || "Speaker";
+        state.caughtName = state.lastLoser;
+      } else {
+        state.lie.score.room += 1;
+        state.lastLoser = "Room";
+        state.caughtName = null;
+      }
+      if (state.lie.round >= 3) {
+        finishLieEngine();
+        return;
+      }
+      state.lie.round += 1;
+      timers.push(setTimeout(() => lieReadyCountdown(), 600));
+    }
+
+    function nextLieRound() {
+      state.lie.round += 1;
+      if (state.lie.round > 3) {
+        finishLieEngine();
+        return;
+      }
+      lieReadyCountdown();
+    }
+
+    function finishLieEngine() {
+      const resultTitle = document.getElementById("lieRevealTitle");
+      const resultSub = document.getElementById("lieRevealSub");
+      if (state.lie.score.speaker > state.lie.score.room) {
+        resultTitle.textContent = "SPEAKER WINS 🏆";
+        resultSub.textContent = `Speaker: ${state.lie.score.speaker} | Room: ${state.lie.score.room}`;
+        state.lastLoser = "Room";
+        state.caughtName = null;
+      } else if (state.lie.score.room > state.lie.score.speaker) {
+        resultTitle.textContent = "ROOM WINS 🏆";
+        resultSub.textContent = `Room: ${state.lie.score.room} | Speaker: ${state.lie.score.speaker}`;
+        state.lastLoser = state.lie.speaker || "Speaker";
+        state.caughtName = state.lastLoser;
+      } else {
+        resultTitle.textContent = "DRAW";
+        resultSub.textContent = "Both sides even.";
+        state.lastLoser = null;
+        state.caughtName = null;
+      }
+      setScreen("lieReveal");
+    }
+
+    // UI bindings
+    document.getElementById("btn-age-yes").onclick = () => { ensureAudio(); setScreen("setup"); };
+    document.getElementById("btn-age-exit").onclick = () => alert("Come back when the crew is ready. Exiting.");
+
+    document.getElementById("btn-count-dec").onclick = () => {
+      state.playerCount = Math.max(3, state.playerCount - 1);
+      document.getElementById("playerCount").textContent = state.playerCount;
+      if (state.players.length > state.playerCount) {
+        state.players = state.players.slice(0, state.playerCount);
+        renderNames();
+      } else {
+        updateNameLimitUI();
+      }
+    };
+    document.getElementById("btn-count-inc").onclick = () => {
+      state.playerCount = Math.min(20, state.playerCount + 1);
+      document.getElementById("playerCount").textContent = state.playerCount;
+      updateNameLimitUI();
+    };
+
+    chaosSlider.addEventListener("input", () => {
+      state.chaosLevel = parseInt(chaosSlider.value, 10);
+      updateChaosUI();
+    });
+
+    document.getElementById("btn-add-name").onclick = () => {
+      const val = document.getElementById("nameInput").value.trim();
+      if (!val) return;
+      if (state.players.length >= state.playerCount) {
+        alert(`You already have ${state.playerCount} names. Remove one to add another.`);
+        return;
+      }
+      if (!state.players.includes(val)) state.players.push(val);
+      document.getElementById("nameInput").value = "";
+      renderNames();
+    };
+
+    document.getElementById("btn-how").onclick = () => {
+      alert("One phone. Host taps outcomes. Drink or skip with tasks. Chaos level controls timers. Pass the phone fast.");
+    };
+    document.getElementById("btn-sound").onclick = (e) => {
+      state.settings.sound = !state.settings.sound;
+      e.target.textContent = `Sound: ${state.settings.sound ? "ON" : "OFF"}`;
+      ensureAudio();
+      updateAudioSetting();
+    };
+    document.getElementById("btn-vibe").onclick = (e) => {
+      state.settings.vibration = !state.settings.vibration;
+      e.target.textContent = `Vibration: ${state.settings.vibration ? "ON" : "OFF"}`;
+    };
+
+    document.getElementById("btn-start-party").onclick = () => {
+      ensureAudio();
+      if (startParty()) renderNames();
+    };
+    document.getElementById("btn-start-selected").onclick = startSelectedGame;
+
+    document.getElementById("btn-adjust-chaos").onclick = () => setScreen("setup");
+    document.getElementById("btn-adjust-chaos-2").onclick = () => setScreen("setup");
+
+    document.getElementById("btn-reset-party").onclick = resetParty;
+    document.getElementById("btn-privacy-settings").onclick = () => {
+      showPrivacyModal(false);
+    };
+
+    document.getElementById("btn-game1-start").onclick = startGame1Play;
+    document.getElementById("btn-game1-rules").onclick = () => alert("Pass the phone hand-to-hand. No throwing. Anyone holding it when it explodes loses.");
+
+    document.getElementById("btn-caught-me").onclick = () => { state.caughtName = "You"; state.lastLoser = "You"; showPenalty(1); };
+    document.getElementById("btn-caught-pick").onclick = () => {
+      const picker = document.getElementById("caughtPicker");
+      picker.style.display = "block";
+      renderCaughtList();
+    };
+
+    document.getElementById("btn-penalty-drink").onclick = () => { taskCard.style.display = "none"; goPostRound("Drink"); };
+    document.getElementById("btn-penalty-skip").onclick = () => {
+      if (taskCard.style.display !== "block") {
+        pickTask();
+        penaltyStats.textContent = state.caughtName ? `Caught: ${state.caughtName}` : "";
+        penaltySub.textContent = "Complete the task, then continue.";
+        return;
+      }
+      goPostRound("Skip/Task");
+    };
+
+    document.getElementById("btn-play-again").onclick = () => { currentGame = state.lastGamePlayed; launchCurrentGame(); };
+    document.getElementById("btn-next-game").onclick = nextGame;
+    document.getElementById("btn-change-game").onclick = changeGame;
+    document.getElementById("btn-home").onclick = goLobby;
+
+    document.getElementById("btn-pick-player").onclick = startGame2Select;
+    document.getElementById("btn-spin").onclick = spinRoulette;
+    document.getElementById("btn-start-rhythm").onclick = goLevelSelect;
+    document.getElementById("card-easy").onclick = () => selectLevel("easy");
+    document.getElementById("card-medium").onclick = () => selectLevel("medium");
+    document.getElementById("card-hard").onclick = () => selectLevel("hard");
+
+    document.getElementById("btn-round-ready").onclick = startRhythmCountdown;
+    document.getElementById("btn-round-back").onclick = goLevelSelect;
+    document.getElementById("btn-level-back").onclick = startGame2Select;
+
+    document.getElementById("btn-fail").onclick = handleJudgeFail;
+    document.getElementById("btn-clean").onclick = handleJudgePass;
+    document.getElementById("btn-go-medium").onclick = () => {
+      state.rhythm.currentLevel = "medium";
+      state.rhythm.round = 1;
+      state.rhythm.usedIndices.medium = [];
+      state.rhythm.currentSequence = [];
+      enterRound();
+    };
+    document.getElementById("btn-go-hard").onclick = () => {
+      state.rhythm.currentLevel = "hard";
+      state.rhythm.round = 1;
+      state.rhythm.usedIndices.hard = [];
+      state.rhythm.currentSequence = [];
+      enterRound();
+    };
+    document.getElementById("btn-replay-level").onclick = () => {
+      const lvl = state.rhythm.currentLevel;
+      state.rhythm.round = 1;
+      state.rhythm.usedIndices[lvl] = [];
+      state.rhythm.currentSequence = [];
+      enterRound();
+    };
+    document.getElementById("btn-next-game-result").onclick = nextGame;
+    document.getElementById("btn-result-continue").onclick = goLevelSelect;
+
+    document.getElementById("btn-duel-start").onclick = startDuelPick;
+    const duelRollBtn = document.getElementById("btn-duel-roll");
+    if (duelRollBtn) duelRollBtn.onclick = rollDuelPlayers;
+    document.getElementById("btn-coin-heads").onclick = () => setCoinChoice(true);
+    document.getElementById("btn-coin-tails").onclick = () => setCoinChoice(false);
+    document.getElementById("btn-duel-ready").onclick = () => {
+      const task = getDuelTask();
+      if (task.type === "coin" && !state.duel.coinAssign) {
+        alert("Pick Heads or Tails first.");
+        return;
+      }
+      startDuelCountdown();
+    };
+    document.getElementById("btn-duel-a").onclick = () => awardDuelPoint(1, true);
+    document.getElementById("btn-duel-b").onclick = () => awardDuelPoint(0, true);
+    document.getElementById("btn-duel-none").onclick = () => awardDuelPoint(null, true);
+    document.getElementById("btn-duel-penalty").onclick = () => { currentGame = 3; showPenalty(3); };
+
+    document.getElementById("btn-lie-start").onclick = startLieSpeaker;
+    document.getElementById("btn-lie-truth").onclick = () => setLieChoice("truth");
+    document.getElementById("btn-lie-lie").onclick = () => setLieChoice("lie");
+    document.getElementById("btn-room-truth").onclick = () => handleLieVote("truth");
+    document.getElementById("btn-room-lie").onclick = () => handleLieVote("lie");
+    document.getElementById("btn-lie-penalty").onclick = () => { currentGame = 4; showPenalty(4); };
+
+    document.getElementById("btn-age-yes").addEventListener("click", ensureAudio);
+    document.getElementById("btn-ads-personalized").onclick = async () => {
+      await setAdsPreference("personalized");
+      hidePrivacyModal();
+    };
+    document.getElementById("btn-ads-nonpersonalized").onclick = async () => {
+      await setAdsPreference("nonpersonalized");
+      hidePrivacyModal();
+    };
+    document.getElementById("btn-ads-reset-consent").onclick = resetAdsConsent;
+    document.getElementById("btn-ads-close").onclick = hidePrivacyModal;
+
+    window.addEventListener("devicemotion", (event) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+      const mag = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+      if (mag > 20 && screens.game2Select.classList.contains("active")) {
+        spinRoulette();
+      }
+    });
+
+    loadPersistFlag();
+    loadSettings();
+    document.getElementById("playerCount").textContent = state.playerCount;
+    document.getElementById("btn-sound").textContent = `Sound: ${state.settings.sound ? "ON" : "OFF"}`;
+    document.getElementById("btn-vibe").textContent = `Vibration: ${state.settings.vibration ? "ON" : "OFF"}`;
+    loadPlayers();
+    renderNames();
+    updateChaosUI();
+    renderGameList();
+    updateSelectedGameInfo();
+    initPrivacyFlow();
+    setScreen("age");
+  </script>
+</body>
+</html>
